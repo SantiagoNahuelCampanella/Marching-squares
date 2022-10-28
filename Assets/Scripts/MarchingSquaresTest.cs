@@ -4,10 +4,15 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.UI;
 
+
+public class squareData {
+    public int sCase , xStart , yStart;
+}
+
 public class MarchingSquaresTest : MonoBehaviour
 {
     public int sizeW,sizeH;
-    public List<int> squareCase;
+    public List<squareData> squares =  new List<squareData>();
 
 
     public float[,] points;
@@ -43,7 +48,13 @@ public class MarchingSquaresTest : MonoBehaviour
                 if (points[y + 1, x + 1] > 0.5f) { caseValue |= 4; }
                 if (points[y, x + 1] > 0.5f) { caseValue |= 8; }
 
-                squareCase.Add(caseValue);
+                squareData tempSq = new squareData();
+
+                tempSq.sCase = caseValue;
+                tempSq.xStart = x;
+                tempSq.yStart = y;
+
+                squares.Add(tempSq);
             }
         }
 
@@ -65,10 +76,15 @@ public class MarchingSquaresTest : MonoBehaviour
                     Gizmos.color = Color.Lerp(Color.white, Color.black, points[y,x]);
                     Handles.Label(new Vector3(x, 0, y) + transform.position, "" + points[y,x]);
                     Gizmos.DrawWireSphere(new Vector3(x, 0, y) + transform.position, 0.05f);
+                  
                 }
             }
 
-            HandleSquareCase(squareCase[0], 0, 0);
+            for (int i = 0; i < squares.Count; i++)
+            {
+                HandleSquareCase(squares[i].sCase, squares[i].xStart , squares[i].yStart);
+            }
+
         }
     }
 
@@ -98,25 +114,25 @@ public class MarchingSquaresTest : MonoBehaviour
 
             { 0,-1, 0, 1, 3, 0, 1, 2, 2,-1, 2, 3,-1,-1,-1,-1,-1,-1}, //5
 
-            { 0, 1, 1,-1, 2,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}, //6
+            { 0, 1, 1,-1, 2,-1, 2,-1, 2, 3, 0, 1,-1,-1,-1,-1,-1,-1}, //6
 
-            {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}, //7
+            { 0,-1, 1,-1, 3, 0, 1,-1, 2, 3, 3, 0, 1,-1, 2,-1, 2, 3}, //7
 
-            {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}, //8
+            { 2, 3, 3,-1, 3, 0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}, //8
 
-            {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}, //9
+            { 0,-1, 0, 1, 2, 3, 2, 3, 3,-1, 0,-1,-1,-1,-1,-1,-1,-1}, //9
 
-            {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}, //10
+            { 0, 1, 1,-1, 1, 2, 2, 3, 3,-1, 3, 0,-1,-1,-1,-1,-1,-1}, //10
 
-            {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}, //11
+            { 0,-1, 1,-1, 1, 2, 0,-1, 1, 2, 2, 3, 2, 3, 3,-1, 0,-1}, //11
 
-            {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}, //12
+            { 1, 2, 2,-1, 3, 0, 2,-1, 3,-1, 3, 0,-1,-1,-1,-1,-1,-1}, //12
 
-            {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}, //13
+            { 0,-1, 0, 1, 3,-1, 0, 1, 1, 2, 3,-1, 1, 2, 2,-1, 3,-1}, //13
 
-            {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}, //14
+            { 0, 1, 1,-1, 2,-1, 2,-1, 3, 0, 0, 1, 2,-1, 3,-1, 3, 0}, //14
 
-            {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}  //15
+            { 0,-1, 1,-1, 2,-1, 2,-1, 3,-1, 0,-1,-1,-1,-1,-1,-1,-1}  //15
         };
 
         //every 6 numbers on the table represent 1 triangle
@@ -128,6 +144,8 @@ public class MarchingSquaresTest : MonoBehaviour
                 Vector3 vertexB = new Vector3();
                 Vector3 vertexC = new Vector3();
 
+                //the ints are orginized on pairs, each pair represents a side of the square comprised of 2 corners
+                //if the second int in the pair is a -1 (mening it doesnt exist in the shape), it means the vertex is in the corner of the first int
                 if (triangulationTable[sCase, i + 1] != -1)
                 {
                     vertexA = Vector3.Lerp(pointPos[triangulationTable[sCase,i]], pointPos[triangulationTable[sCase, i + 1]], 0.5f);
@@ -157,8 +175,8 @@ public class MarchingSquaresTest : MonoBehaviour
 
                 Gizmos.color = Color.green;
                 Gizmos.DrawLine(vertexA,vertexB);
-                Gizmos.DrawLine(vertexB, vertexC);
-                Gizmos.DrawLine(vertexC, vertexA);
+                Gizmos.DrawLine(vertexB,vertexC);
+                Gizmos.DrawLine(vertexC,vertexA);
             }
         }
     }
