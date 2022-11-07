@@ -8,14 +8,20 @@ using UnityEngine.UI;
 public class squareData {
     public int sCase , xStart , yStart;
 }
-
+[RequireComponent(typeof(MeshFilter))]
+[RequireComponent(typeof(MeshRenderer))]
 public class MarchingSquaresTest : MonoBehaviour
 {
     public int sizeW,sizeH;
     public List<squareData> squares =  new List<squareData>();
-
-
     public float[,] points;
+
+    public bool activateGizmoLines = false;
+
+    Mesh mesh;
+    public List<Vector3> meshVertices;
+    Vector2[] meshUvs;
+    int[] meshVertexIndex;
 
 
     // Start is called before the first frame update
@@ -24,7 +30,6 @@ public class MarchingSquaresTest : MonoBehaviour
         transform.position = new Vector3(0,0,0);
 
         points = new float[sizeH, sizeW];
-
 
         for (int y = 0; y < sizeH; y++)
         {
@@ -58,12 +63,20 @@ public class MarchingSquaresTest : MonoBehaviour
             }
         }
 
+        mesh = GetComponent<MeshFilter>().mesh;
+        mesh.MarkDynamic();
+
+        for (int i = 0; i < squares.Count; i++)
+        {
+            HandleSquareCase(squares[i].sCase, squares[i].xStart, squares[i].yStart);
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        if (Input.GetKeyDown(KeyCode.G)) { activateGizmoLines = !activateGizmoLines; }
+        if (Input.GetKeyDown(KeyCode.Mouse0)) { CreateMesh(); }
     }
 
     private void OnDrawGizmos()
@@ -80,9 +93,14 @@ public class MarchingSquaresTest : MonoBehaviour
                 }
             }
 
-            for (int i = 0; i < squares.Count; i++)
-            {
-                HandleSquareCase(squares[i].sCase, squares[i].xStart , squares[i].yStart);
+            if (activateGizmoLines) {
+                for (int i = 0; i < meshVertices.Count; i += 3)
+                {
+                    Gizmos.color = Color.green;
+                    Gizmos.DrawLine(meshVertices[i], meshVertices[i + 1]);
+                    Gizmos.DrawLine(meshVertices[i + 1], meshVertices[i + 2]);
+                    Gizmos.DrawLine(meshVertices[i + 2], meshVertices[i]);
+                }
             }
 
         }
@@ -173,12 +191,27 @@ public class MarchingSquaresTest : MonoBehaviour
                     vertexC = pointPos[triangulationTable[sCase, i + 4]];
                 }
 
-                Gizmos.color = Color.green;
-                Gizmos.DrawLine(vertexA,vertexB);
-                Gizmos.DrawLine(vertexB,vertexC);
-                Gizmos.DrawLine(vertexC,vertexA);
+                meshVertices.Add(vertexA);
+                meshVertices.Add(vertexB);
+                meshVertices.Add(vertexC);
             }
+
         }
+    }
+
+    void CreateMesh() {
+
+        mesh.Clear();
+
+
+        meshVertexIndex = new int[meshVertices.Count];
+
+        for (int i = 0; i < meshVertexIndex.Length; i++) {
+            meshVertexIndex[i] = i;
+        }
+
+        mesh.SetVertices(meshVertices);
+        mesh.triangles = meshVertexIndex;
     }
 }
 
